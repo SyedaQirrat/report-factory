@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_report_inventory_valuation" model="ir.actions.report">
+            <field name="name">Inventory Valuation Report</field>
+            <field name="model">report.mulphico_inventory_report.report_inventory_valuation_template</field>
+            <field name="report_type">qweb-html</field>
+            <field name="report_name">mulphico_inventory_report.report_inventory_valuation_template</field>
+            <field name="report_file">mulphico_inventory_report.report_inventory_valuation_template</field>
+            <field name="print_report_name">'Inventory Valuation - %s' % (object.date_from)</field>
+            <field name="binding_model_id" ref="model_mulphico_inventory_report_wizard"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>

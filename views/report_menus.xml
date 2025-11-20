@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="action_open_inventory_report_wizard" model="ir.actions.act_window">
+            <field name="name">Inventory Valuation Report</field>
+            <field name="res_model">mulphico.inventory.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem
+            id="menu_inventory_valuation_report"
+            name="Inventory Valuation Report"
+            parent="stock.menu_warehouse_report"
+            action="action_open_inventory_report_wizard"
+            sequence="100"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_inventory_valuation_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2>Inventory Valuation Report</h2>
+                    <p>
+                        <strong>Period:</strong>
+                        <span t-esc="date_from" t-options="{'widget': 'date'}"/>
+                        to
+                        <span t-esc="date_to" t-options="{'widget': 'date'}"/>
+                    </p>
+                    <p>
+                        <strong>Warehouses:</strong>
+                        <span t-esc="', '.join(warehouses.mapped('name'))"/>
+                    </p>
+                    
+                    <table class="table table-sm table-bordered" style="font-size: 10px;">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th rowspan="2">Product Barcode</th>
+                                <th rowspan="2">Product</th>
+                                <th rowspan="2">Product Model</th>
+                                <th rowspan="2">Product Category</th>
+                                
+                                <th colspan="3" class="text-center">Opening</th>
+                                <th colspan="3" class="text-center">Receipts</th>
+                                <th colspan="3" class="text-center">Manufactured</th>
+                                <th colspan="3" class="text-center">Delivered</th>
+                                <th colspan="3" class="text-center">Adjustment</th>
+                                <th colspan="3" class="text-center">Scrap</th>
+                                <th colspan="3" class="text-center">Closing</th>
+                            </tr>
+                            <tr>
+                                <th>QTY</th>
+                                <th>Rate</th>
+                                <th>Value</th>
+                                <th>QTY</th>
+                                <th>Rate</th>
+                                <th>Value</th>
+                                <th>QTY</th>
+                                <th>Rate</th>
+                                <th>Value</th>
+                                <th>QTY</th>
+                                <th>Rate</th>
+                                <th>Value</th>
+                                <th>QTY</th>
+                                <th>Rate</th>
+                                <th>Value</th>
+                                <th>QTY</th>
+                                <th>Rate</th>
+                                <th>Value</th>
+                                <th>QTY</th>
+                                <th>Rate</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <t t-foreach="report_lines" t-as="line">
+                                <tr>
+                                    <td><span t-esc="line['product_barcode']"/></td>
+                                    <td><span t-esc="line['product_name']"/></td>
+                                    <td><span t-esc="line['product_model']"/></td>
+                                    <td><span t-esc="line['product_category']"/></td>
+                                    
+                                    <td><span t-esc="line['opening_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['opening_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['opening_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    
+                                    <td><span t-esc="line['receipt_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['receipt_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['receipt_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    
+                                    <td><span t-esc="line['manufactured_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['manufactured_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['manufactured_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    
+                                    <td><span t-esc="line['delivered_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['delivered_rate']" t-options="{'widget':* 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['delivered_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    
+                                    <td><span t-esc="line['adjustment_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['adjustment_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['adjustment_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    
+                                    <td><span t-esc="line['scrap_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['scrap_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['scrap_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    
+                                    <td><span t-esc="line['closing_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['closing_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['closing_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>
