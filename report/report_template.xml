@@ -13,16 +13,19 @@
                     </p>
                     <p>
                         <strong>Warehouses:</strong>
-                        <span t-esc="', '.join(warehouses.mapped('name'))"/>
+                        <span t-esc="warehouse_names"/>
                     </p>
                     
-                    <table class="table table-sm table-bordered" style="font-size: 10px;">
+                    <table class="table table-sm table-bordered" style="font-size: 8px;">
                         <thead class="thead-dark">
                             <tr>
-                                <th rowspan="2">Product Barcode</th>
+                                <th rowspan="2">Principal</th>
+                                <th rowspan="2">Type</th>
+                                <th rowspan="2">Barcode</th>
                                 <th rowspan="2">Product</th>
-                                <th rowspan="2">Product Model</th>
-                                <th rowspan="2">Product Category</th>
+                                <th rowspan="2">Model</th>
+                                <th rowspan="2">Category</th>
+                                <th rowspan="2">Method</th>
                                 
                                 <th colspan="3" class="text-center">Opening</th>
                                 <th colspan="3" class="text-center">Receipts</th>
@@ -33,37 +36,24 @@
                                 <th colspan="3" class="text-center">Closing</th>
                             </tr>
                             <tr>
-                                <th>QTY</th>
-                                <th>Rate</th>
-                                <th>Value</th>
-                                <th>QTY</th>
-                                <th>Rate</th>
-                                <th>Value</th>
-                                <th>QTY</th>
-                                <th>Rate</th>
-                                <th>Value</th>
-                                <th>QTY</th>
-                                <th>Rate</th>
-                                <th>Value</th>
-                                <th>QTY</th>
-                                <th>Rate</th>
-                                <th>Value</th>
-                                <th>QTY</th>
-                                <th>Rate</th>
-                                <th>Value</th>
-                                <th>QTY</th>
-                                <th>Rate</th>
-                                <th>Value</th>
+                                <t t-foreach="range(7)" t-as="i">
+                                    <th>QTY</th>
+                                    <th>Rate</th>
+                                    <th>Value</th>
+                                </t>
                             </tr>
                         </thead>
                         
                         <tbody>
                             <t t-foreach="report_lines" t-as="line">
                                 <tr>
+                                    <td><span t-esc="line['principal']"/></td>
+                                    <td><span t-esc="line['type']"/></td>
                                     <td><span t-esc="line['product_barcode']"/></td>
                                     <td><span t-esc="line['product_name']"/></td>
                                     <td><span t-esc="line['product_model']"/></td>
                                     <td><span t-esc="line['product_category']"/></td>
+                                    <td><span t-esc="line['costing_method']"/></td>
                                     
                                     <td><span t-esc="line['opening_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
                                     <td><span t-esc="line['opening_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
@@ -78,7 +68,7 @@
                                     <td><span t-esc="line['manufactured_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
                                     
                                     <td><span t-esc="line['delivered_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
-                                    <td><span t-esc="line['delivered_rate']" t-options="{'widget':* 'float', 'precision': 2}"/></td>
+                                    <td><span t-esc="line['delivered_rate']" t-options="{'widget': 'float', 'precision': 2}"/></td>
                                     <td><span t-esc="line['delivered_value']" t-options="{'widget': 'float', 'precision': 2}"/></td>
                                     
                                     <td><span t-esc="line['adjustment_qty']" t-options="{'widget': 'float', 'precision': 2}"/></td>
@@ -96,7 +86,6 @@
                             </t>
                         </tbody>
                     </table>
-                    
                 </div>
             </t>
         </t>

@@ -1,31 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-
-        <record id="inventory_report_wizard_form_view" model="ir.ui.view">
-            <field name="name">mulphico.inventory.report.wizard.form</field>
-            <field name="model">mulphico.inventory.report.wizard</field>
-            <field name="arch" type="xml">
-                <form>
+    <record id="view_inventory_report_wizard_form" model="ir.ui.view">
+        <field name="name">inventory.report.wizard.form</field>
+        <field name="model">mulphico.inventory.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Inventory Valuation Report">
+                <group>
                     <group>
-                        <group>
-                            <field name="date_from"/>
-                            <field name="warehouse_ids" widget="many2many_tags"/>
-                            <field name="category_ids" widget="many2many_tags"/>
-                        </group>
-                        <group>
-                            <field name="date_to"/>
-                            <field name="location_ids" widget="many2many_tags"/>
-                            <field name="product_ids" widget="many2many_tags"/>
-                        </group>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
                     </group>
-                    <footer>
-                        <button name="action_print_report" string="Print Report" type="object" class="btn-primary"/>
-                        <button string="Cancel" class="btn-secondary" special="cancel"/>
-                    </footer>
-                </form>
-            </field>
-        </record>
+                    <group>
+                        <field name="warehouse_ids" widget="many2many_tags"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="location_ids" widget="many2many_tags"/>
+                    <field name="category_ids" widget="many2many_tags"/>
+                    <field name="product_ids" widget="many2many_tags"/>
+                </group>
+                
+                <footer>
+                    <button name="action_print_report" string="Print PDF" type="object" class="btn-primary"/>
+                    <button name="action_print_excel" string="Export Excel" type="object" class="btn-success"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
 
-    </data>
+    <record id="action_inventory_report_wizard" model="ir.actions.act_window">
+        <field name="name">Inventory Valuation Report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">mulphico.inventory.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
 </odoo>
