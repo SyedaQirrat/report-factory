@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import base64
 import io
+import xlsxwriter  # Odoo 18 standard import for external lib
 from odoo import models, fields, api
-from odoo.tools.misc import xlsxwriter
 
 class InventoryReportWizard(models.TransientModel):
     _name = 'mulphico.inventory.report.wizard'
@@ -49,17 +49,19 @@ class InventoryReportWizard(models.TransientModel):
             return {'domain': {'product_ids': []}}
 
     def action_print_report(self):
+        """ Generate PDF Report """
         self.ensure_one()
         data = {'form': self.read()[0]}
         return self.env.ref('mulphico_inventory_report.action_report_inventory_valuation').report_action(self, data=data)
 
     def action_print_excel(self):
+        """ Generate Excel Report """
         self.ensure_one()
         
-        # 1. Fetch Data using the existing Report Model Logic
+        # 1. Fetch Data using the Report Model's logic to ensure consistency
         report_model = self.env['report.mulphico_inventory_report.report_inventory_valuation_template']
         data = {'form': self.read()[0]}
-        # We manually call _get_report_values to get the calculated dictionary
+        # Manually call _get_report_values to get the calculated data
         values = report_model._get_report_values(docids=[self.id], data=data)
         lines = values.get('report_lines', [])
 
@@ -68,59 +70,61 @@ class InventoryReportWizard(models.TransientModel):
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         sheet = workbook.add_worksheet('Inventory Valuation')
 
-        # 3. Formats
+        # 3. Define Formats
         header_format = workbook.add_format({
-            'bold': True, 'border': 1, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#D3D3D3', 'font_size': 10
+            'bold': True, 'border': 1, 'align': 'center', 'valign': 'vcenter', 
+            'bg_color': '#D3D3D3', 'font_size': 10, 'text_wrap': True
         })
         sub_header_format = workbook.add_format({
-            'bold': True, 'border': 1, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#F0F0F0', 'font_size': 9
+            'bold': True, 'border': 1, 'align': 'center', 'valign': 'vcenter', 
+            'bg_color': '#F0F0F0', 'font_size': 9
         })
         cell_format = workbook.add_format({'border': 1, 'font_size': 9})
         num_format = workbook.add_format({'border': 1, 'font_size': 9, 'num_format': '#,##0.00'})
 
-        # 4. Write Headers
-        # Main Headers (Row 1)
+        # 4. Write Headers (Row 1: Main Categories)
+        # Columns: Principal, Type, Model, Barcode, Product, Prod Model, Cat, Rate, Method (9 cols)
+        # Then 7 blocks of 3 columns (Opening...Closing)
+        
         main_headers = [
-            'Principal', 'Type', 'Model', 'Product Barcode', 'Product', 'Product Model', 'Product Category', 'Rate', 'Product Costing Method',
-            'Opening', 'Receipts', 'Manufactured', 'Delivered', 'Adjustment', 'Scrap', 'Closing'
+            'Principal', 'Type', 'Model', 'Product Barcode', 'Product', 
+            'Product Model', 'Product Category', 'Rate', 'Costing Method',
+            'Opening', 'Receipts', 'Manufactured', 'Delivered', 
+            'Adjustment', 'Scrap', 'Closing'
         ]
         
-        # Columns 0-8 are single columns. Columns 9-15 (Opening to Closing) span 3 columns each.
         col_idx = 0
-        for header in main_headers:
-            if header in ['Opening', 'Receipts', 'Manufactured', 'Delivered', 'Adjustment', 'Scrap', 'Closing']:
-                sheet.merge_range(0, col_idx, 0, col_idx + 2, header, header_format)
-                col_idx += 3
-            else:
-                sheet.merge_range(0, col_idx, 1, col_idx, header, header_format)
-                col_idx += 1
-
-        # Sub Headers (Row 2) - Only for the quantitative columns
-        # The first 9 columns are merged vertically, so we start writing sub-headers at column 9
-        start_col = 9
-        sections = ['Opening', 'Receipts', 'Manufactured', 'Delivered', 'Adjustment', 'Scrap', 'Closing']
-        for _ in sections:
-            sheet.write(1, start_col, 'QTY', sub_header_format)
-            sheet.write(1, start_col + 1, 'Rate', sub_header_format)
-            sheet.write(1, start_col + 2, 'Value', sub_header_format)
-            start_col += 3
+        # Write Metadata Headers (Single Columns)
+        meta_cols = 9
+        for i in range(meta_cols):
+            sheet.merge_range(0, i, 1, i, main_headers[i], header_format)
+            col_idx += 1
+            
+        # Write Value Headers (Merged 3 Columns)
+        for i in range(meta_cols, len(main_headers)):
+            sheet.merge_range(0, col_idx, 0, col_idx + 2, main_headers[i], header_format)
+            # Write Sub-headers (QTY, Rate, Value)
+            sheet.write(1, col_idx, 'QTY', sub_header_format)
+            sheet.write(1, col_idx + 1, 'Rate', sub_header_format)
+            sheet.write(1, col_idx + 2, 'Value', sub_header_format)
+            col_idx += 3
 
         # 5. Write Data Rows
         row = 2
         for line in lines:
             c = 0
-            # Metadata Columns
+            # Metadata
             sheet.write(row, c, line.get('principal', ''), cell_format); c+=1
             sheet.write(row, c, line.get('type', ''), cell_format); c+=1
-            sheet.write(row, c, line.get('product_model', ''), cell_format); c+=1 # Model column
+            sheet.write(row, c, '', cell_format); c+=1 # Model (Empty/Placeholder)
             sheet.write(row, c, line.get('product_barcode', ''), cell_format); c+=1
-            sheet.write(row, c, line.get('product_name', ''), cell_format); c+=1
-            sheet.write(row, c, line.get('product_model', ''), cell_format); c+=1 # Product Model column (Placeholder used product.name)
+            sheet.write(row, c, line.get('product_name', ''), cell_format); c+=1 # Display Name
+            sheet.write(row, c, line.get('product_model', ''), cell_format); c+=1 # Product Model (Placeholder)
             sheet.write(row, c, line.get('product_category', ''), cell_format); c+=1
-            sheet.write(row, c, line.get('closing_rate', 0.0), num_format); c+=1 # Rate (usually closing rate or standard price)
+            sheet.write(row, c, line.get('closing_rate', 0.0), num_format); c+=1 # Using Closing Rate
             sheet.write(row, c, line.get('costing_method', ''), cell_format); c+=1
 
-            # Value Columns
+            # Quantities and Values
             groups = ['opening', 'receipt', 'manufactured', 'delivered', 'adjustment', 'scrap', 'closing']
             for group in groups:
                 sheet.write(row, c, line.get(f'{group}_qty', 0.0), num_format); c+=1
@@ -129,18 +133,23 @@ class InventoryReportWizard(models.TransientModel):
             
             row += 1
 
+        # Adjust Column Widths
+        sheet.set_column(0, 8, 15) # Metadata cols
+        sheet.set_column(9, 50, 10) # Value cols
+
         workbook.close()
         output.seek(0)
 
-        # 6. Save and Return Action
-        filename = 'Inventory Valuation Report.xlsx'
+        # 6. Save to binary field
+        filename = 'Inventory_Valuation_Report.xlsx'
         self.write({
             'excel_file': base64.b64encode(output.read()),
             'excel_filename': filename
         })
 
+        # 7. Return download action
         return {
             'type': 'ir.actions.act_url',
-            'url': '/web/content/?model=mulphico.inventory.report.wizard&id={}&field=excel_file&filename_field=excel_filename&download=true'.format(self.id),
+            'url': f'/web/content/?model=mulphico.inventory.report.wizard&id={self.id}&field=excel_file&filename_field=excel_filename&download=true',
             'target': 'self',
         }

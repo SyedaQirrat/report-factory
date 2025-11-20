@@ -20,24 +20,21 @@ class InventoryValuationReport(models.AbstractModel):
         location_ids = self.env['stock.location'].browse(wizard_data['location_ids'])
         product_ids = self.env['product.product'].browse(wizard_data['product_ids'])
         
-        # Get warehouse names for the report header
-        warehouse_objs = self.env['stock.warehouse'].browse(wizard_data['warehouse_ids'])
-        warehouse_names = ', '.join(warehouse_objs.mapped('name'))
+        # Fetch Warehouse names for display
+        warehouse_names = ', '.join(self.env['stock.warehouse'].browse(wizard_data['warehouse_ids']).mapped('name'))
 
         report_lines = []
 
         for product in product_ids:
-            # --- 1. Fetch Custom/Static Fields ---
-            # NOTE: Ensure x_principal and x_device_type exist on product.product or product.template
-            # Using getattr to prevent crash if fields are missing in DB
-            principal = getattr(product, 'x_principal', 'N/A')
-            device_type = getattr(product, 'x_device_type', 'N/A')
+            # --- 1. Fetch Fields (Custom & Standard) ---
+            # Use getattr to avoid errors if custom fields aren't created yet
+            principal = getattr(product, 'x_principal', '') 
+            device_type = getattr(product, 'x_device_type', '') 
             
-            # Costing Method is usually on the Category
-            costing_method = product.categ_id.property_cost_method or 'standard'
-
-            # PLACEHOLDER: Using product name as 'Product Model' as requested
-            product_model_placeholder = product.name 
+            # Placeholder for Product Model using Name as requested
+            product_model = product.name 
+            
+            costing_method = product.categ_id.property_cost_method or ''
 
             # --- 2. Get Opening Balance ---
             opening_context = {'to_date': date_from, 'location': location_ids.ids}
@@ -66,12 +63,11 @@ class InventoryValuationReport(models.AbstractModel):
             scrap_qty, scrap_value = 0.0, 0.0
 
             for line in move_lines:
-                # Calculate value for this specific move
-                # Note: This sums all layers for the move. 
+                # Calculate value for the move based on valuation layers
                 line_val_layers = ValuationLayer.sudo().search([('stock_move_id', '=', line.move_id.id)])
                 line_value = abs(sum(line_val_layers.mapped('value')))
 
-                # IN moves (Destination is in selected locations)
+                # IN moves
                 if line.location_dest_id.id in location_ids.ids and line.location_id.id not in location_ids.ids:
                     if line.move_id.picking_id and line.move_id.picking_id.picking_type_code == 'incoming':
                         receipt_qty += line.qty_done
@@ -80,11 +76,10 @@ class InventoryValuationReport(models.AbstractModel):
                         manufactured_qty += line.qty_done
                         manufactured_value += line_value
                     else:
-                        # Treat others (like inventory adjustments) as adjustments
                         adjustment_qty += line.qty_done
                         adjustment_value += line_value
 
-                # OUT moves (Source is in selected locations)
+                # OUT moves
                 elif line.location_id.id in location_ids.ids and line.location_dest_id.id not in location_ids.ids:
                     if line.move_id.picking_id and line.move_id.picking_id.picking_type_code == 'outgoing':
                         delivered_qty += line.qty_done
@@ -93,7 +88,6 @@ class InventoryValuationReport(models.AbstractModel):
                         scrap_qty += line.qty_done
                         scrap_value += line_value
                     else:
-                        # Treat others as adjustments (negative quantity for OUT)
                         adjustment_qty -= line.qty_done
                         adjustment_value -= line_value
 
@@ -110,38 +104,18 @@ class InventoryValuationReport(models.AbstractModel):
                 'principal': principal,
                 'type': device_type,
                 'product_barcode': product.barcode or '',
-                'product_name': product.name or '',
-                'product_model': product_model_placeholder, 
+                'product_name': product.display_name or '', # [REF] Name
+                'product_model': product_model,             # Placeholder
                 'product_category': product.categ_id.display_name or '',
                 'costing_method': costing_method,
                 
-                'opening_qty': opening_qty, 
-                'opening_rate': opening_rate, 
-                'opening_value': opening_value,
-                
-                'receipt_qty': receipt_qty, 
-                'receipt_rate': receipt_value / receipt_qty if receipt_qty else 0.0, 
-                'receipt_value': receipt_value,
-                
-                'manufactured_qty': manufactured_qty, 
-                'manufactured_rate': manufactured_value / manufactured_qty if manufactured_qty else 0.0, 
-                'manufactured_value': manufactured_value,
-                
-                'delivered_qty': delivered_qty, 
-                'delivered_rate': delivered_value / delivered_qty if delivered_qty else 0.0, 
-                'delivered_value': delivered_value,
-                
-                'adjustment_qty': adjustment_qty, 
-                'adjustment_rate': adjustment_value / adjustment_qty if adjustment_qty else 0.0, 
-                'adjustment_value': adjustment_value,
-                
-                'scrap_qty': scrap_qty, 
-                'scrap_rate': scrap_value / scrap_qty if scrap_qty else 0.0, 
-                'scrap_value': scrap_value,
-                
-                'closing_qty': closing_qty, 
-                'closing_rate': closing_rate, 
-                'closing_value': closing_value,
+                'opening_qty': opening_qty, 'opening_rate': opening_rate, 'opening_value': opening_value,
+                'receipt_qty': receipt_qty, 'receipt_rate': receipt_value / receipt_qty if receipt_qty else 0.0, 'receipt_value': receipt_value,
+                'manufactured_qty': manufactured_qty, 'manufactured_rate': manufactured_value / manufactured_qty if manufactured_qty else 0.0, 'manufactured_value': manufactured_value,
+                'delivered_qty': delivered_qty, 'delivered_rate': delivered_value / delivered_qty if delivered_qty else 0.0, 'delivered_value': delivered_value,
+                'adjustment_qty': adjustment_qty, 'adjustment_rate': adjustment_value / adjustment_qty if adjustment_qty else 0.0, 'adjustment_value': adjustment_value,
+                'scrap_qty': scrap_qty, 'scrap_rate': scrap_value / scrap_qty if scrap_qty else 0.0, 'scrap_value': scrap_value,
+                'closing_qty': closing_qty, 'closing_rate': closing_rate, 'closing_value': closing_value,
             })
 
         return {
